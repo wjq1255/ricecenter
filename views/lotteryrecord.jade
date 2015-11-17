@@ -1,0 +1,51 @@
+doctype html
+html
+   head
+      meta(http-equiv='Content-Type', content='text/html; charset=utf-8')
+      meta(name='viewport', content='width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no')
+      title 中奖纪录
+      style.
+         html {
+            font-size: 62.5%;
+         }
+         *{margin: 0px;padding: 0px;}
+         body {font-family: '微软雅黑';color: #000;margin: 0px;padding: 0px;background:#fe8d13;}
+         img{
+            border: none;
+            width: 100%;
+         }
+         table{border-collapse:collapse;}
+         a {color: #fff;text-decoration: none;}
+         .pr{position:relative;}
+         .pa{position:absolute;}
+         .winMain{height:auto;width:100%;}
+         .back{left:0;top:50%;margin-top:-20px;z-index:2;}
+         .back img{width:40px;height:40px;}
+         .tableList{width:94%;margin-left:3%;top:10px;padding:1%;background:#fff;height:50px;}
+         .tableList th{color:#f17410;font-size:1.6rem;border-bottom:1px solid #f17410;text-align: center;height:36px;padding-top:10px;}
+         .tableList td{border-bottom:1px solid #f7ac70;text-align: center;height:36px;font-size:1.4rem;}
+         .tableList th:first-child,.tableList tr td:first-child{border-right:1px solid #f7ac70;width:35%;
+         }
+         .tableMain{width:94%;left:3%;top:20px;height:auto;border-radius:5px 5px 0 0;background:#fff url(/images/tableB.gif) bottom no-repeat;}
+         .page{bottom:-30px;left:3%;height:30px;width:94%;}
+         .page a{top:0;padding:5px 10px;font-size:2rem;font-weight:bold;}
+         .page p{color:#fff;width:100%;text-align:center;font-size:1.6rem;height:36px;line-height:36px;}
+         .last{left:0;}
+         .next{right:0;}
+   body
+      section.winMain.pr
+         .tableMain.pa
+            table.tableList(cellpadding='0')
+               tr(style='border-bottom:1px solid #f17410;')
+                  th 中奖时间
+                  th 中奖名称
+                  for c in resultList
+                     tr
+                     td #{c.time}
+                     td #{c.integral}
+            .page.pr
+               a.last.pa(href='/activity/queryLotteryRecord/?appclientid=1&phone=#{phonenum}&currentPage=#{currentPage - 1}')  <
+               p
+                  span #{currentPage}
+                  | / #{total}
+               a.next.pa(href='/activity/queryLotteryRecord/?appclientid=1&phone=#{phonenum}&currentPage=#{currentPage + 1}')  >

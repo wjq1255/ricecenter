@@ -1,0 +1,191 @@
+html
+   meta(charset='utf-8')
+   meta(name='viewport', content='width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no')
+   head
+      title 转盘抽奖
+      style.
+         html {
+            font-size: 62.5%;
+         }
+         body {font-family: '微软雅黑';color: #000;margin: 0px;padding: 0px;text-align: center;}
+         img{
+            border: none;
+            width:100%;
+         }
+         a {color: #000;  text-decoration: none;}
+         .pr{position:relative;}
+         .pa{position:absolute;}
+         #main{height:auto;width:100%;position:relative;}
+         .myPrize{top:20.2%;right:4%;color:#fff;font-size:1.4rem;display:block;}
+         .rotary{top:24.5%;left:11.5%;width:77%;}
+         .draw{top:40.8%;left:35%;width:30%;}
+         .drawAlert{top:80%;left:0;width:100%;font-size:1.4rem;color:#fff;text-align:center;}
+         .drawUser{top:92.5%;left:20%;width:76%;font-size:1.3rem;color:#e78a41;}
+         .awardBg{position:absolute;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.64);display:none;}
+         .award{
+            left:15%;
+            position:absolute;
+            width:70%;
+            height:260px;
+            z-index:1;
+            top: 32%;
+            font-size:1.4rem;
+            background:url('/images/award-zhuanpan.png') no-repeat;
+            background-size:100% 100%;
+         }
+         .awardtext{
+            left:15%;
+            position:relative;
+            width:70%;
+            height:120px;
+            z-index:2;
+            margin-top: 24%;
+            text-align: center;
+         }
+   body
+      #main.pr
+         img(src='/images/mainBg.gif', alt='开启疯狂赚米')
+         a.myPrize.pa(onclick='LotteryDraw.showWinnerRecord();')
+            | 我的奖品
+         img.rotary.pa(src='/images/rotary.png', alt='转盘区域')
+         img.draw.pa(src='/images/draw.png', alt='点击开始抽奖')
+         input#phone(type='hidden', value='#{phone}')
+         input#phonenum(type='hidden', value='#{phonenum}')
+         input#share_title(type='hidden', value='#{shareinfo.title}')
+         input#share_content(type='hidden', value='#{shareinfo.content}')
+         input#share_url(type='hidden', value='#{shareinfo.shortaddr}')
+         input#isfirst(type='hidden', value='#{first}')
+         p.drawAlert.pa 消耗10金米可再次抽奖
+         .awardBg
+            #award.award
+               .awardtext
+                  #awrard-title(style='font-family:华文中宋;font-size:24px; color:#fde599;')
+                  br
+                  #award-msg(style='font-family:华文中宋;font-size:15px; color:#fde599;')
+                  div(style='margin-top:10%; margin-left:15%;width:70%')
+                     img(src='/images/sure.png', onclick='onemoretime();')
+                     img#sharebutton(style='display:none;', src='/images/share.png')
+         marquee.drawUser.pa(loop='-1', scrollamount='2')
+            span#marqueeContent
+      script(type='text/javascript', src='/javascripts/jquery.js')
+      script(type='text/javascript', src='/javascripts/jquery.easing.min.js')
+      script(type='text/javascript', src='/javascripts/jQueryRotate.2.2.js')
+      script(type='text/javascript').
+         function onemoretime()
+         {
+            $(".awardBg").css('display','none');
+            $('#sharebutton').css('display','none');
+         }
+         var _wrap=$('#ticket');//定义滚动区域
+         var _interval=3000;//定义滚动间隙时间
+         var _moving;//需要清除的动画
+         _wrap.hover(function(){
+            clearInterval(_moving);//当鼠标在滚动区域中时,停止滚动
+         },function(){
+            _moving=setInterval(function(){
+               var _field=_wrap.find('li:first');//此变量不可放置于函数起始处，li:first取值是变化的
+               var _h=_field.height();//取得每次滚动高度
+               _field.animate({marginTop:-_h+'px'},600,function(){//通过取负margin值，隐藏第一行
+                  _field.css('marginTop',0).appendTo(_wrap);//隐藏后，将该行的margin值置零，并插入到最后，实现无缝滚动
+               })
+            },_interval)//滚动间隔时间取决于_interval
+         }).trigger('mouseleave');//函数载入时，模拟执行mouseleave，即自动滚动
+         function initLottery(){
+            $(".draw").bind('click', function(){
+                       $("#moretime").css('display','none');
+                       $(".draw").unbind("click");
+                       //判断用户是否登录
+                       if($("#phone").val().length == 0 || $("#phone").val() == 'undefined')
+                       {
+                          LotteryDraw.redirectLogin();
+                          return;
+                       }
+                       $.ajax({
+                          url:"/activity/getLotteryNum/?appclientid=1&phone="+$("#phonenum").val(),
+                          type:"GET",
+                          datatype:"json",
+                          success:function(json)
+                          {
+                             if(typeof(json) != "undefined")
+                             {
+                                res = eval('(' + json + ')');
+                                if(res.code == 0)
+                                {
+                                   $('.rotary').stopRotate();
+                                   $(".rotary").rotate({
+                                      angle:0,
+                                      duration: 6000,
+                                      animateTo: 1440 + res.angle, //angle是图片上各奖项对应的角度，1440是我要让指针旋转4圈。所以最后的结束的角度就是这样子^^
+                                      callback:function(){
+                                         if(res.rice && res.rice > 0)
+                                         {
+                                            $('#awrard-title').html('恭喜您!');
+                                            $('#sharebutton').css("display","block");
+                                         }
+                                         else
+                                         {
+                                            $('#awrard-title').html('再接再厉!');
+                                         }
+                                         $('#award-msg').text(res.msg);
+                                         $('.awardBg').css("display","block");
+                                         $('#rice').text(res.integral);
+                                         initLottery();
+                                         LotteryDraw.updateStatus(res.integral);
+                                      }
+                                   });
+                                }
+                                else if(res.code == 4)
+                                {
+                                   $('#awrard-title').html('金米不足！');
+                                   $('#award-msg').text(res.msg);
+                                   $('.awardBg').css("display","block");
+                                   initLottery();
+                                }
+                                else
+                                {
+                                   $('#awrard-title').html('消息');
+                                   $('#award-msg').text(res.msg);
+                                   $('.awardBg').css("display","block");
+                                   initLottery();
+                                }
+                             }
+                             $('#main').css('overflow','hidden');
+                          }
+                       });
+                    }
+            );
+         }
+         initLottery();
+         $("#sharebutton").click(function(){
+            try
+            {
+               LotteryDraw.shareMsg();
+            }
+            catch(error)
+            {
+            }
+            LotteryDraw.shareMsg($('#share_title').val(),$('#share_content').val(),$('#share_url').val());
+         });
+         $(function(){
+            if($('#isfirst').val() == '1')
+            {
+               $("#moretime").css('display','block');
+            }
+            $.ajax({
+               url:"/activity/getAwardRecord?appclientid=1",
+               type:"GET",
+               datatype:"JSON",
+               success:function(json){
+                  if(json != '' && typeof json != 'undefined')
+                  {
+                     json = eval('(' + json + ')');
+                     var content = "";
+                     $.each(json,function(index,item){
+                        content = content + "恭喜" + item.phone.substring(0,3) +"****"+item.phone.substring(7,11) + "获得" + item.integral + "金米&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp"
+                        //$("#ticket").append($("<li>用户名&nbsp;&nbsp;&nbsp;&nbsp;"+item.phone.substring(0,3) +"****"+item.phone.substring(7,11)+"<span class='nLlR'>"+item.integral+"金米</span></li>"));
+                     });
+                     $("#marqueeContent").html(content);
+                  }
+               }
+            });
+         });
